@@ -11,10 +11,10 @@ import math
 from medpy import metric as mc
 
 from models import unet_all_conv
-from utils import SegmentationMetric, Tool, resize_test_img_and_mask, split_raw
+from utils import SegmentationMetric, Tool, split_raw, get_parse
 
+args = get_parse()
 # weight_path = './params/Unet2_zdm_ep400_BCE_640x640_selfResize_all_conv.pth'
-weight_path = './params/Unet2_zdm_ep400_BCE_640x640_selfResize.pth'
 # last_weight_path = './checkpoint_path/Unet1_zdm_ep400_BCELogic_640x640_AdamW_cheakpoint/unet_ep40.pth'
 # #
 # img_save_path = './save_img/Unet2_zdm_ep400_BCE_640x640_selfResize_all_conv/'
@@ -28,7 +28,7 @@ test_img_path = r'D:\files\data\test_data/'
 true_label_path = r'D:\files\data\test_mask/'
 
 model = unet_all_conv.Unet(5, 1).cuda()
-model.load_state_dict(torch.load(weight_path))
+model.load_state_dict(torch.load(args.weight))
 img_resize = (640, 640)
 threshold = 0.5
 transform = transforms.Compose([
@@ -44,8 +44,8 @@ def five_channel_test():
     if os.path.exists(mask_save_path):
         shutil.rmtree(mask_save_path)
 
-    os.mkdir(img_save_path)
-    os.mkdir(mask_save_path)
+    os.makedirs(img_save_path)
+    os.makedirs(mask_save_path)
 
     m_dice = 0
     m_pa = 0
@@ -141,3 +141,8 @@ if __name__ == '__main__':
     # mv_test_mask_label()
     # model_test()
     five_channel_test()
+
+# python train.py --data VOC.yaml --weights can_yolov5n.pt --img 640
+# /train/exp/weights/best.pt
+# runs/train/exp3/weights/best.pt
+# runs/detect/exp4

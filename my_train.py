@@ -5,12 +5,13 @@ from torch import optim
 from matplotlib import pyplot as plt
 # import numpy as np
 from datetime import datetime
+# from pathlib import Path
 # from torch.cuda.amp import GradScaler, autocast
 import os
 import gc
 
 from data_handle import MyData
-from models import unet_all_conv
+from models import UNetAddLayers
 from utils import get_parse
 
 gc.collect()
@@ -19,27 +20,19 @@ args = get_parse()
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
-# train_img_path = './data/img/'
-# train_img_path = r'D:\work\work_data\DM\zm_jm\images/'
-# train_img_path = r'D:\work\work_data\ZM\zm_jm\images/'
-# train_label_path = './data/mask/'
-# train_label_path = r'D:\py_program\testAll\data_handle_all\segment_handle_data\data\mask_zm/'
 cur_model_name = args.weight.split('/')[-1].split('.')[0]
-# weight_path = './params/Unet_all_conv_zdm_ep220_BCE_640x640_selfResize.pth'
-# weight_path_last = './params/Unet2_zdm_ep400_BCE_640x640_640x640_selfResize_all_conv_last.pth'
-# train_loss_curve_save_path = './loss_pic/Unet2_zdm_ep400_BCE_640x640_selfResize_all_conv_loss/'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 train_dataset = MyData(args.train_label, args.train_data, img_size=(640, 640))
 train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 # scaler = GradScaler()
-model = unet_all_conv.Unet(5, 1).to(device)
+model = UNetAddLayers.Unet(5, 1).to(device)
 # model = UNet.Unet(5, 1)
 loss_func = nn.BCELoss()
-# loss_func = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters())
 
 
+# loss_func = nn.BCEWithLogitsLoss()
 # optimizer = optim.AdamW(model.parameters())
 
 
@@ -53,12 +46,14 @@ def draw_loss(loss_list, epochs):
     plt.legend(loc='best', labels=['loss'])
     plt.title('unet train loss curve')
     plt.plot(x, y, label='unet train loss curve')
-    plt.savefig(os.path.join(args.train_loss_curve_save_path + cur_model_name, 'epoch_' + str(epochs) + '.png'))
+    plt.savefig(os.path.join(args.train_loss_curve_save_path + cur_model_name, '_epoch_' + str(epochs) + '.png'))
     print(str(epochs) + ' loss save ok')
     plt.close()
 
 
 def mkdir_path():
+    # f = Path(__file__).resolve()
+    # root = f.parents[0]
     if not os.path.exists(args.checkpoint_path + cur_model_name):
         os.mkdir(args.checkpoint_path + cur_model_name)
     if not os.path.exists(args.train_loss_curve_save_path + cur_model_name):
@@ -87,7 +82,6 @@ def train():
             optimizer.step()
             epoch_loss += loss.item()
             step += 1
-            # train_loss_list.append(loss.item())
             if step % 5 == 0:
                 print('[%s]: Epoch %d ======> global step %d/%d ===========> train_loss: %.4f ' % (
                     datetime.now(), i, step, len(train_dataloader), loss.item()))
