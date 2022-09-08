@@ -66,7 +66,7 @@ def mkdir_path():
 
 def train():
     model.train()
-    best_loss = 0.01
+    best_loss = 0.0001
     train_loss_list = []
     for i in range(args.go_on_epoch, 1 + args.epochs):
         epoch_loss = 0
@@ -87,7 +87,7 @@ def train():
             epoch_loss += loss.item()
             step += 1
             if step % 5 == 0:
-                print('[%s]: Epoch %d ======> global step %d/%d ===========> train_loss: %.4f ' % (
+                print('[%s]: Epoch %d ======> global step %d/%d ===========> train_loss: %.6f ' % (
                     datetime.now(), i, step, len(train_dataloader), loss.item()))
             if best_loss > loss.item():
                 torch.save(model.state_dict(), args.weight)

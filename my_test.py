@@ -7,7 +7,6 @@ import os
 import cv2
 from PIL import Image
 from skimage import io
-import math
 from medpy import metric as mc
 
 from models import unet_all_conv

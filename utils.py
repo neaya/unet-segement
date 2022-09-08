@@ -385,9 +385,10 @@ def get_parse():
     parser.add_argument('--test-label', type=str, default=test_label, help='test label path')
     parser.add_argument('--train_loss_curve_save_path', type=str, default='./train_loss_pic/',
                         help='train loss curve save path')
-    parser.add_argument('--checkpoint_path', type=str, default='./checkpoint/', help='checkpoint params save path')
-    parser.add_argument('--go_on_epoch', type=int, default=60, help='checkpoint params epoch')
-    parser.add_argument('--go_on_param', type=str, default='UnetAddLayers_zdm_ep300_BCE_640x640_selfResize_ep60.pth',
+    parser.add_argument('--checkpoint_path', type=str, default='./checkpoint/',
+                        help='checkpoint params save path')
+    parser.add_argument('--go_on_epoch', type=int, default=100, help='checkpoint params epoch')
+    parser.add_argument('--go_on_param', type=str, default='_ep100.pth',
                         help='checkpoint go on params')
 
     parser.add_argument('--img-size', nargs='+', type=int, default=(640, 640), help='image size')
