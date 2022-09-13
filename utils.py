@@ -1,6 +1,8 @@
 import argparse
 import json
+import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import shutil
@@ -365,11 +367,54 @@ def handle_CAN_train_data(train_path_resized):
     return train_set
 
 
+def paste_evaluation(img, m_iou, save_path):
+    text = str(m_iou)
+    left_down_location = (0, img.shape[0] - 25)
+    # img = io.imread(img_path)
+    # img = np.transpose(img[:5, :, :], (1, 2, 0))
+    cv2.putText(img, text, left_down_location,
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=1.5, color=(255, 255, 255), thickness=3,
+                lineType=None, bottomLeftOrigin=None)
+    cv2.imwrite(save_path, img)
+
+
+def test_show_diff_pred_raw():
+    raw_path = r'D:\files\data\test_mask'
+    pred_path = r'D:\files\data\save_img'
+    raw_list, pred_list = [], []
+    for raw in os.listdir(raw_path):
+        img_path = os.path.join(raw_path, raw)
+        img = cv2.imread(img_path, 0)
+        raw_list.append(img)
+    for pred in os.listdir(pred_path):
+        img_path = os.path.join(pred_path, pred)
+        img = cv2.imread(img_path)
+        # img = io.imread(img_path)
+        # img = np.transpose(img[:5, :, :], (1, 2, 0))
+        pred_list.append(img)
+
+    for i in range(len(raw_list)):
+        plt.figure(figsize=(18, 9))
+        # plt.figure()
+        plt.subplot(1, 2, 1)
+        img = plt.imshow(raw_list[i])
+        img.set_cmap('gray')
+
+        plt.subplot(1, 2, 2)
+        plt.imshow(pred_list[i])
+        plt.show()
+        # time.sleep(2)
+
+
 def get_parse():
     train_data = r'D:\py_program\testAll\segement\src\data\img/'
     train_label = r'D:\py_program\testAll\segement\src\data\mask/'
     test_data = r'D:\files\data\test_data/'
     test_label = r'D:\files\data\test_mask/'
+
+    img_save_path = r'D:\files\data\save_img/'
+    mask_save_path = r'D:\files\data\save_mask/'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='model training epochs')
@@ -383,6 +428,9 @@ def get_parse():
     parser.add_argument('--train-label', type=str, default=train_label, help='train label path')
     parser.add_argument('--test-data', type=str, default=test_data, help='test data path')
     parser.add_argument('--test-label', type=str, default=test_label, help='test label path')
+    parser.add_argument('--img_save_path', type=str, default=img_save_path, help='to save pred img')
+    parser.add_argument('--mask_save_path', type=str, default=mask_save_path, help='to save pred mask')
+
     parser.add_argument('--train_loss_curve_save_path', type=str, default='./train_loss_pic/',
                         help='train loss curve save path')
     parser.add_argument('--checkpoint_path', type=str, default='./checkpoint/',
@@ -398,6 +446,7 @@ def get_parse():
 
     parser.add_argument('--threshold', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--workers', type=int, default=4, help='maximum number of dataloader workers')
+    parser.add_argument('--class_number', type=int, default=2, help='segement label class number')
 
     opt = parser.parse_args()
     # print(opt)
