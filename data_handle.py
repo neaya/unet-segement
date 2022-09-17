@@ -7,6 +7,7 @@ import cv2
 from skimage import io
 
 
+
 class MyData(Dataset):
     def __init__(self, mask_path, img_path, img_size=(512, 512)):
         super(MyData, self).__init__()
@@ -37,13 +38,21 @@ class MyData(Dataset):
 
 
 if __name__ == '__main__':
+    from utils import get_parse
+    from models import UNetAddLayers
+
+    args = get_parse()
     train_img_path = r'D:\work\work_data\ZM\zm_jm\images/'
     train_label_path = r'D:\py_program\testAll\data_handle_all\segment_handle_data\data\mask_mut/'
     train_dataset = MyData(train_label_path, train_img_path, img_size=(640, 640))
     train_loader = DataLoader(train_dataset,
-                              batch_size=2,
+                              batch_size=4,
                               shuffle=True,
-                              num_workers=2)
+                              num_workers=4)
+    model = UNetAddLayers.Unet(5, 1)
     for data, label in train_loader:
         print(data.shape, label.shape)
+        out = model(data)
+        print(out.shape)
+        print(out)
         break

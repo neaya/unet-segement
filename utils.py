@@ -407,6 +407,13 @@ def test_show_diff_pred_raw():
         # time.sleep(2)
 
 
+def early_stop(avg_loss: list, num):
+    if len(avg_loss) < num:
+        return
+    last_num_loss = avg_loss[len(avg_loss) - num:]
+    last_avg_loss = sum(last_num_loss) / len(last_num_loss)
+
+
 def get_parse():
     train_data = r'D:\py_program\testAll\segement\src\data\img/'
     train_label = r'D:\py_program\testAll\segement\src\data\mask/'
