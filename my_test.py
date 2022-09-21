@@ -53,7 +53,8 @@ def five_channel_test():
             # print(out.shape)
             out = torch.reshape(out.cpu(), args.img_size)
             out = out.cpu().detach().numpy()
-            pred_img[y1:y2, x1:x2] = out
+            # pred_img[y1:y2, x1:x2] = out
+            pred_img[y1:y2, x1:x2] = cv2.bitwise_or(pred_img[y1:y2, x1:x2], out)
         pred_img = np.where(pred_img > args.threshold, 1, 0)
         # 把图片贴合回去展示
         # draw in mask

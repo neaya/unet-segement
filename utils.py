@@ -379,6 +379,19 @@ def paste_evaluation(img, m_iou, save_path):
     cv2.imwrite(save_path, img)
 
 
+def test_two_pics_U():
+    a = np.array([[1, 2, 3],
+                  [2, 3, 0],
+                  [0, 0, 1]])
+    b = np.array([[0, 9],
+                  [2, 0]])
+    # out = a[1:3, 0:2]
+    # print(out)
+    # U_res = cv2.bitwise_or(a[1:3, 0:2], b)
+    a[1:3, 0:2] = cv2.bitwise_or(a[1:3, 0:2], b)
+    print(a)
+
+
 def test_show_diff_pred_raw():
     raw_path = r'D:\files\data\test_mask'
     pred_path = r'D:\files\data\save_img'
@@ -407,11 +420,72 @@ def test_show_diff_pred_raw():
         # time.sleep(2)
 
 
-def early_stop(avg_loss: list, num):
-    if len(avg_loss) < num:
-        return
-    last_num_loss = avg_loss[len(avg_loss) - num:]
-    last_avg_loss = sum(last_num_loss) / len(last_num_loss)
+# def early_stop(avg_loss: list, num):
+#     if len(avg_loss) < num:
+#         return
+#     last_num_loss = avg_loss[len(avg_loss) - num:]
+#     last_avg_loss = sum(last_num_loss) / len(last_num_loss)
+
+def split_tiff_and_mask(img_resize=512, is_save=True,
+                        data_path=r'D:\files\data\test_split/',
+                        sub_img_path=r'D:\files\data\train_data/',
+                        mask_path=r'D:\files\data\test_mask1/',
+                        sub_mask_path=r'D:\files\data\train_mask/'):
+    if os.path.exists(sub_img_path):
+        shutil.rmtree(sub_img_path)
+    if os.path.exists(sub_mask_path):
+        shutil.rmtree(sub_mask_path)
+    os.makedirs(sub_img_path)
+    os.makedirs(sub_mask_path)
+
+    sub_img_list, sub_mask_list, start_position = [], [], []
+
+    # 扩充边缘到整数
+    for tiff in os.listdir(data_path):
+        p = os.path.join(data_path, tiff)
+        p_mask = os.path.join(mask_path, tiff.split('.')[0] + '.png')
+        img = io.imread(p)
+        img = np.transpose(img, (1, 2, 0))  # (2001, 2551, 5)
+        mask = cv2.imread(p_mask, 0)  # mask尺寸和img一样
+
+        h, w = img.shape[:2]
+        new_w, new_h = w, h
+        if w % img_resize != 0:
+            new_w = (w // img_resize + 1) * img_resize
+        if h % img_resize != 0:
+            new_h = (h // img_resize + 1) * img_resize
+
+        top, left = (new_h - h) // 2, (new_w - w) // 2
+        bottom, right = new_h - h - top, new_w - w - left
+        new_img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+        new_mask = cv2.copyMakeBorder(mask, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+        # print(new_img.shape)  # (2048, 2560, 5)
+        # print(new_mask.shape)  # (2048, 2560)
+        new_img_to_save = np.transpose(new_img, (2, 0, 1))
+        # print(new_img.shape)  # (2048, 2560, 5)
+        # print(new_img_to_save.shape)  # (5, 2048, 2560)
+        # io.imsave('./a.tiff', new_img_to_save)
+        pos_x = [_ * img_resize for _ in range(new_w // img_resize + 1)]
+        pos_y = [_ * img_resize for _ in range(new_h // img_resize + 1)]
+        num = 0
+        for i in range(len(pos_x) - 1):
+            for j in range(len(pos_y) - 1):
+                x0, y0, x1, y1 = pos_x[i], pos_y[j], pos_x[i + 1], pos_y[j + 1]
+                start_position.append((x0, y0, x1, y1))
+                # print((x0, y0, x1, y1))
+                sub_img = new_img_to_save[:, y0: y1, x0: x1]  # (5, 512, 512), 裁剪坐标为[:, y0:y1, x0:x1]
+                sub_mask = new_mask[y0: y1, x0: x1]
+                sub_img_list.append(sub_img)
+                sub_mask_list.append(sub_mask)
+                if is_save:
+                    save_sub_img_path = os.path.join(sub_img_path, tiff.split('.')[0] + '_' + str(num) + '.tiff')
+                    save_sub_mask_path = os.path.join(sub_mask_path, tiff.split('.')[0] + '_' + str(num) + '.png')
+                    io.imsave(save_sub_img_path, sub_img)
+                    cv2.imwrite(save_sub_mask_path, sub_mask)
+                    print(save_sub_img_path, ' save ok')
+                    print(save_sub_mask_path, ' save ok')
+                num += 1
+        return sub_img_list, sub_mask_list, start_position
 
 
 def get_parse():
